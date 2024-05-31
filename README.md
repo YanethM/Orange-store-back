@@ -21,3 +21,4 @@ Execute the script with this command:
 npm run dev
 npx prisma format
 npx prisma generate
+npx prisma migrate dev
