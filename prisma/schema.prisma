@@ -14,12 +14,49 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  fullname  String
-  email     String   @unique
-  password  String
-  avatar    String
-  role      String   @default("user")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                         Int      @id @default(autoincrement())
+  fullname                   String
+  first_surname              String
+  second_surname             String
+  identification             String   @unique
+  cod_cost_center            String?
+  cost_center                String?
+  position                   String?
+  company                    String?
+  division                   String?
+  payment_city               String?
+  associeted_vice_presidency String?
+  vice_presidency            String?
+  email                      String   @unique
+  password                   String
+  avatar                     String?
+  role                       String   @default("user")
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+  Order                      Order[]
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  price       Float
+  description String
+  stock       Int
+  size        String?
+  color       String?
+  images      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Order       Order?   @relation(fields: [orderId], references: [id])
+  orderId     Int?
+}
+
+model Order {
+  id        Int       @id @default(autoincrement())
+  user      User      @relation(fields: [userId], references: [id])
+  userId    Int
+  products  Product[]
+  total     Float
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }

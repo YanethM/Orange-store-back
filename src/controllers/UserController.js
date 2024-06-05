@@ -2,17 +2,42 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const createUser = async (req, res) => {
-  const { fullname, email, password, role } = req.body;
+  const { fullname,
+    first_surname,
+    second_surname,
+    identification,
+    email,
+    password,
+    cod_cost_center,
+    cost_center,
+    position,
+    company,
+    division,
+    payment_city,
+    associeted_vice_presidency,
+    vice_presidency,
+    role, } = req.body;
   const avatar = req.file ? req.file.filename : null; 
 
   try {
     const user = await prisma.user.create({
       data: {
         fullname,
+        first_surname,
+        second_surname,
+        identification,
+        cod_cost_center: cod_cost_center ?? null,
+        cost_center,
+        position,
+        company,
+        division,
+        payment_city,
+        associeted_vice_presidency,
+        vice_presidency,
         email,
         password,
-        role,
         avatar,
+        role,
       },
     });
     console.log(user);
@@ -35,9 +60,22 @@ const getAllUsers = async (req, res) => {
       select: {
         id: true,
         fullname: true,
+        first_surname: true,
+        second_surname: true,
+        identification: true,
+        cod_cost_center: true,
+        cost_center: true,
+        position: true,
+        company: true,
+        division: true,
+        payment_city: true,
+        associeted_vice_presidency: true,
+        vice_presidency: true,
         email: true,
-        role: true,
+        password: true,
         avatar: true,
+        role: true,
+
       },
     });
     console.log(users);
@@ -50,11 +88,12 @@ const getAllUsers = async (req, res) => {
 
 const getUserById = async (req, res) => {
     const { id } = req.params;
-    console.log(id);
+    const userId = parseInt(id, 10);
+    console.log(userId);
     try {
       const user = await prisma.user.findUnique({
         where: {
-          id: id,
+          id: userId,
         },
       });
       res.status(200).json(user);
@@ -64,25 +103,60 @@ const getUserById = async (req, res) => {
     }
   }
 
-const updateUser = async (req, res) => {
+  const updateUser = async (req, res) => {
     const { id } = req.params;
-    console.log(id);
-    const { fullname, email, password, role } = req.body;
+    const userId = parseInt(id, 10);
+  
+    const {
+      fullname,
+      first_surname,
+      second_surname,
+      identification,
+      cod_cost_center,
+      cost_center,
+      position,
+      company,
+      division,
+      payment_city,
+      associeted_vice_presidency,
+      vice_presidency,
+      email,
+      password,
+      role,
+      avatar,
+    } = req.body;
     console.log(req.body);
-
+  
     try {
+      const updateData = {
+        fullname,
+        first_surname,
+        second_surname,
+        identification,
+        cod_cost_center,
+        cost_center,
+        position,
+        company,
+        division,
+        payment_city,
+        associeted_vice_presidency,
+        vice_presidency,
+        email,
+        password,
+        role,
+      };
+  
+      if (avatar) {
+        updateData.avatar = avatar;
+      }
+  
       const user = await prisma.user.update({
         where: {
-          id: id,
+          id: userId,
         },
-        data: {
-          fullname,
-          email,
-          password,
-          role,
-        },
+        data: updateData,
       });
-
+  
       res.status(200).json({
         message: 'User updated successfully',
         user,
@@ -91,15 +165,15 @@ const updateUser = async (req, res) => {
       console.error(error);
       res.status(500).json({ error: 'Failed to update user' });
     }
-  }
-
+  };
+  
 const deleteUser = async (req, res) => {
     const { id } = req.params;
-  console.log(id);
+    const userId = parseInt(id, 10);
     try {
       await prisma.user.delete({
         where: {
-          id: id,
+          id: userId,
         },
       });
 
