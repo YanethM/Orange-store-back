@@ -9,6 +9,8 @@ cd orangestoreback
 npm install
 Alternative: Clone the entire repo
 
+ sudo mysql -u root -p
+
 ## 2. Create the database
 
 Run the following command to create your MongoDB database file. This also creates the User and Other tables that are defined in prisma/schema.prisma:
@@ -21,7 +23,8 @@ Execute the script with this command:
 npm run dev
 npx prisma format
 npx prisma generate
-npx prisma migrate dev
+---npx prisma migrate dev
+npx prisma push db
 
 ## Endpoints
 
@@ -51,3 +54,6 @@ http://localhost:3002/orders
 http://localhost:3002/orders/:id
 http://localhost:3002/orders/edit/:id
 http://localhost:3002/orders/remove/:id
+
+
+Falta restablecer contraseña y falta asignar a los registros 
