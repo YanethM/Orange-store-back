@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 const jwt = require('jsonwebtoken');
 
  const signup = async (req, res) => {
-   const { fullname, first_surname, second_surname, identification, email, password } = req.body;
+   const { fullname, identification, email, password } = req.body;
    console.log(req.body);
    try {
      const user = await prisma.user.findFirst({
@@ -18,8 +18,6 @@ const jwt = require('jsonwebtoken');
        const newUser = await prisma.user.create({
          data: {
            fullname,
-           first_surname,
-           second_surname,
            identification,
            email,
            password: hashSync(password, 10),
@@ -34,34 +32,37 @@ const jwt = require('jsonwebtoken');
  };
 
  const login = async (req, res) => {
-    const { identification, password } = req.body;
-    console.log(req.body);
-    try {
-        const user = await prisma.user.findFirst({
-            where: {
-                identification: identification
-            },
-        });
-        if (user) {
-            const valid = compareSync(password, user.password);
-            if (valid) {
-                const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-                    expiresIn: '1h',
-                });
-                res.status(200).json({ user, token });
-            }
-            else {
-                res.status(401).json({ error: 'Invalid credentials' });
-            }
-        }
-        else {
-            res.status(404).json({ error: 'User not found' });
-        }
-    }
-    catch (error) {
+  const { identification, password } = req.body;
+  console.log(req.body);
+  try {
+      const user = await prisma.user.findFirst({
+          where: {
+              identification: identification
+          },
+      });
+      if (user) {
+          const valid = compareSync(password, user.password);
+          if (valid) {
+              const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+                  expiresIn: '1h',
+              });
+              res.status(200).json({
+                  id: user.id,
+                  fullname: user.fullname,
+                  role: user.role,
+                  email: user.email,
+                  token: token
+              });
+          } else {
+              res.status(401).json({ error: 'Invalid credentials' });
+          }
+      } else {
+          res.status(404).json({ error: 'User not found' });
+      }
+  } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Failed to login" });
-    }
+  }
 }
 
  const verifyToken = (req, res, next) => {

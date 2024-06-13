@@ -2,152 +2,141 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const createOrder = async (req, res) => {
-    /* const { userId, products, total } = req.body;
-    console.log(req.body);
-    try {
-        // Crea la orden
-        const order = await prisma.orders.create({
-            data: {
-                user: {
-                    connect: {
-                        id: userId,
-                    },
-                },
-                total: parseFloat(total),
-            },
-        });
-
-        // Crea las relaciones OrderProduct
-        const orderProducts = await Promise.all(
-            products.map((product) =>
-                prisma.orderProduct.create({
-                    data: {
-                        orderId: order.id,
-                        productId: product.id,
-                        quantity: product.quantity,
-                    },
-                })
-            )
-        );
-
-        res.status(201).json({
-            message: "Order and OrderProducts created successfully",
-            order,
-            orderProducts,
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to create Order and OrderProducts" });
-    } */
-    const { userId, products } = req.body;
-    try {
-      // Calcular el total de la orden
-      let total = 0;
-      for (const product of products) {
-        const productData = await prisma.product.findUnique({
-          where: {
-            id: product.id,
-          },
-        });
-        total += productData.price * product.quantity;
-      }
-
-      // Crea la orden
-      const order = await prisma.orders.create({
-        data: {
-          user: {
-            connect: {
-              id: userId,
-            },
-          },
-          total: total,
+  const { userId, products } = req.body;
+  try {
+    // Calcular el total de la orden
+    let total = 0;
+    for (const product of products) {
+      const productData = await prisma.product.findUnique({
+        where: {
+          id: product.id,
         },
       });
 
-      // Crea las relaciones OrderProduct
-      const orderProducts = await Promise.all(
-        products.map((product) =>
-          prisma.orderProduct.create({
-            data: {
-              orderId: order.id,
-              productId: product.id,
-              quantity: product.quantity,
-            },
-          })
-        )
-      );
+      if (productData.stock < product.quantity) {
+        return res
+          .status(400)
+          .json({ error: `Not enough stock for product ${productData.name}` });
+      }
 
-      res.status(201).json({
-        message: "Order and OrderProducts created successfully",
-        order,
-        orderProducts,
-      });
-    } catch (error) {
-      console.error(error);
-      res
-        .status(500)
-        .json({ error: "Failed to create Order and OrderProducts" });
+      total += productData.price * product.quantity;
     }
+
+    // Crea la orden
+    const order = await prisma.orders.create({
+      data: {
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
+        total: total,
+      },
+    });
+
+    // Crea las relaciones OrderProduct
+    const orderProducts = await Promise.all(
+      products.map(async (product) => {
+        await prisma.product.update({
+          where: {
+            id: product.id,
+          },
+          data: {
+            stock: {
+              decrement: product.quantity,
+            },
+          },
+        });
+
+        return prisma.orderProduct.create({
+          data: {
+            orderId: order.id,
+            productId: product.id,
+            quantity: product.quantity,
+          },
+        });
+      })
+    );
+
+    res.status(201).json({
+      message: "Order and OrderProducts created successfully",
+      order,
+      orderProducts,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to create Order and OrderProducts" });
+  }
 };
 
 const getAllOrders = async (req, res) => {
-    try {
-        const orders = await prisma.orders.findMany({
-            include: {
-                products: {
-                    include: {
-                        product: true,
-                    },
-                },
-                user: true,
-            },
-        });
-        res.status(200).json(orders);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to fetch orders" });
-    }
+  try {
+    const orders = await prisma.orders.findMany({
+      include: {
+        products: {
+          include: {
+            product: true,
+          },
+        },
+        user: true,
+      },
+    });
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
 };
-
 
 const getOrderById = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const order = await prisma.orders.findUnique({
-            where: {
-                id: parseInt(id),
-            },
-            include: {
-                products: {
-                    include: {
-                        product: true,
-                    },
-                },
-                user: true,
-            },
-        });
-        if (order) {
-            res.status(200).json(order);
-        } else {
-            res.status(404).json({ error: "Order not found" });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to fetch order" });
+  const { id } = req.params;
+  try {
+    const order = await prisma.orders.findUnique({
+      where: {
+        id: parseInt(id),
+      },
+      include: {
+        products: {
+          include: {
+            product: true,
+          },
+        },
+        user: true,
+      },
+    });
+    if (order) {
+      res.status(200).json(order);
+    } else {
+      res.status(404).json({ error: "Order not found" });
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch order" });
+  }
 };
 
-
-/* const updateOrder = async (req, res) => {
+const updateOrder = async (req, res) => {
   const { id } = req.params;
-  const { products, total } = req.body;
+  const { products } = req.body;
   try {
+    // Calcular el total de la orden
+    let total = 0;
+    for (const product of products) {
+      const productData = await prisma.product.findUnique({
+        where: {
+          id: product.id,
+        },
+      });
+      total += productData.price * product.quantity;
+    }
+
+    // Actualizar la orden con el nuevo total
     const order = await prisma.orders.update({
       where: {
         id: parseInt(id),
       },
       data: {
-        total: parseFloat(total),
+        total: total,
       },
     });
 
@@ -180,91 +169,36 @@ const getOrderById = async (req, res) => {
     console.error(error);
     res.status(500).json({ error: "Failed to update order" });
   }
-}; */
-const updateOrder = async (req, res) => {
-    const { id } = req.params;
-    const { products } = req.body;
-    try {
-        // Calcular el total de la orden
-        let total = 0;
-        for (const product of products) {
-            const productData = await prisma.product.findUnique({
-                where: {
-                    id: product.id,
-                },
-            });
-            total += productData.price * product.quantity;
-        }
-
-        // Actualizar la orden con el nuevo total
-        const order = await prisma.orders.update({
-            where: {
-                id: parseInt(id),
-            },
-            data: {
-                total: total,
-            },
-        });
-
-        // Eliminar las relaciones OrderProduct existentes
-        await prisma.orderProduct.deleteMany({
-            where: {
-                orderId: order.id,
-            },
-        });
-
-        // Crear las nuevas relaciones OrderProduct
-        const orderProducts = await Promise.all(
-            products.map((product) =>
-                prisma.orderProduct.create({
-                    data: {
-                        orderId: order.id,
-                        productId: product.id,
-                        quantity: product.quantity,
-                    },
-                })
-            )
-        );
-
-        res.status(200).json({
-          message: "Order and OrderProducts updated successfully",
-          order,
-          orderProducts,
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to update order" });
-    }
 };
 
 const deleteOrder = async (req, res) => {
-    const { id } = req.params;
-    try {
-        // Eliminar las relaciones OrderProduct primero
-        await prisma.orderProduct.deleteMany({
-            where: {
-                orderId: parseInt(id),
-            },
-        });
+  const { id } = req.params;
+  try {
+    // Eliminar las relaciones OrderProduct primero
+    await prisma.orderProduct.deleteMany({
+      where: {
+        orderId: parseInt(id),
+      },
+    });
 
-        // Luego, eliminar la orden
-        await prisma.orders.delete({
-            where: {
-                id: parseInt(id),
-            },
-        });
+    // Luego, eliminar la orden
+    await prisma.orders.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
 
-        res.status(200).json({ message: "Order deleted successfully" });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to delete order" });
-    }
+    res.status(200).json({ message: "Order deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to delete order" });
+  }
 };
 
 module.exports = {
-    createOrder,
-    getAllOrders,
-    getOrderById,
-    updateOrder,
-    deleteOrder,
+  createOrder,
+  getAllOrders,
+  getOrderById,
+  updateOrder,
+  deleteOrder,
 };

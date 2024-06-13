@@ -7,9 +7,10 @@ const userRoutes = require('./src/routes/UserRoutes');
 const authRoutes = require('./src/routes/AuthRoutes');
 const productRoutes = require('./src/routes/ProductRoutes');
 const orderRoutes = require('./src/routes/OrderRoutes');
+const deliveryRoutes = require('./src/routes/DeliveryRoutes');
 
 // Lista de IPs permitidas
-/* const allowedIPs = ['181.236.217.148', '181.236.217.20', '190.61.43.218']; */
+/* const allowedIPs = ['181.236.217.148', '181.236.217.20']; */
 
 const app = express();
 app.use(bodyParser.json());
@@ -34,6 +35,7 @@ app.use('/users', userRoutes);
 app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
 app.use('/orders', orderRoutes);
+app.use('/deliveries', deliveryRoutes);
 
 
 app.use('/uploads', express.static('uploads'));

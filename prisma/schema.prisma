@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,11 +8,9 @@ datasource db {
 }
 
 model User {
-  id                         Int      @id @default(autoincrement())
+  id                         Int        @id @default(autoincrement())
   fullname                   String
-  first_surname              String
-  second_surname             String
-  identification             String   @unique
+  identification             String     @unique
   cod_cost_center            String?
   cost_center                String?
   position                   String?
@@ -27,12 +19,13 @@ model User {
   payment_city               String?
   associeted_vice_presidency String?
   vice_presidency            String?
-  email                      String   @unique
+  email                      String     @unique
   password                   String
   avatar                     String?
-  role                       String   @default("user")
-  createdAt                  DateTime @default(now())
-  updatedAt                  DateTime @updatedAt
+  role                       String     @default("user")
+  createdAt                  DateTime   @default(now())
+  updatedAt                  DateTime   @updatedAt
+  Delivery                   Delivery[]
   Order                      Orders[]
 }
 
@@ -45,6 +38,7 @@ model Product {
   size        String?
   color       String?
   images      String
+  background  String
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   orders      OrderProduct[]
@@ -52,19 +46,39 @@ model Product {
 
 model Orders {
   id        Int            @id @default(autoincrement())
-  user      User           @relation(fields: [userId], references: [id])
   userId    Int
-  products  OrderProduct[]
   total     Float
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
+  Delivery  Delivery[]
+  products  OrderProduct[]
+  user      User           @relation(fields: [userId], references: [id])
+  @@index([userId], map: "Orders_userId_fkey")
 }
 
 model OrderProduct {
   id        Int     @id @default(autoincrement())
-  order     Orders  @relation(fields: [orderId], references: [id])
   orderId   Int
-  product   Product @relation(fields: [productId], references: [id])
   productId Int
   quantity  Int
+  order     Orders  @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+  @@index([orderId], map: "OrderProduct_orderId_fkey")
+  @@index([productId], map: "OrderProduct_productId_fkey")
+}
+
+model Delivery {
+  id        Int      @id @default(autoincrement())
+  city      String
+  office    String
+  orderId   Int
+  userId    Int
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  order     Orders   @relation(fields: [orderId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([orderId], map: "Delivery_orderId_fkey")
+  @@index([userId], map: "Delivery_userId_fkey")
 }

@@ -3,11 +3,24 @@ const prisma = new PrismaClient();
 
 const createProduct = async (req, res) => {
   const { name, description, price, stock } = req.body;
-  const images = req.files.map((file) => {
-    return { url: file.filename };
-  }, []);
+
+  let images = [];
+  let background = null;
+
+  if (req.files) {
+    if (req.files.images) {
+      images = req.files.images.map((file) => ({ url: file.filename }));
+    }
+
+    if (req.files.background) {
+      background = req.files.background[0].filename;
+    }
+  }
+
   console.log(req.body);
   console.log(images);
+  console.log(background);
+
   try {
     const product = await prisma.product.create({
       data: {
@@ -16,8 +29,10 @@ const createProduct = async (req, res) => {
         price: parseFloat(price),
         stock: parseInt(stock),
         images: JSON.stringify(images),
+        background,
       },
     });
+
     console.log(product);
     res.status(201).json({
       message: "Product created successfully",
