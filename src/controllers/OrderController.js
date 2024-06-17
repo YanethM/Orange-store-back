@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const createOrder = async (req, res) => {
+/* const createOrder = async (req, res) => {
   const { userId, products } = req.body;
   try {
     // Calcular el total de la orden
@@ -53,6 +53,108 @@ const createOrder = async (req, res) => {
             orderId: order.id,
             productId: product.id,
             quantity: product.quantity,
+          },
+        });
+      })
+    );
+
+    res.status(201).json({
+      message: "Order and OrderProducts created successfully",
+      order,
+      orderProducts,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to create Order and OrderProducts" });
+  }
+}; */
+
+const createOrder = async (req, res) => {
+  const { userId, products } = req.body;
+  try {
+    // Calcular el total de la orden
+    let total = 0;
+    for (const product of products) {
+      const productData = await prisma.product.findUnique({
+        where: {
+          id: product.id,
+        },
+        include: {
+          sizes: true,
+        },
+      });
+
+      if (productData.sizes.length > 0) {
+        // Producto con tallas
+        const sizeData = productData.sizes.find(
+          (size) => size.id === product.sizeId
+        );
+        if (!sizeData || sizeData.stock < product.quantity) {
+          return res.status(400).json({
+            error: `Not enough stock for size ${product.sizeId} of product ${productData.name}`,
+          });
+        }
+
+        total += productData.price * product.quantity;
+      } else {
+        // Producto sin tallas
+        if (productData.stock < product.quantity) {
+          return res.status(400).json({
+            error: `Not enough stock for product ${productData.name}`,
+          });
+        }
+
+        total += productData.price * product.quantity;
+      }
+    }
+
+    // Crea la orden
+    const order = await prisma.orders.create({
+      data: {
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
+        total: total,
+      },
+    });
+
+    // Crea las relaciones OrderProduct y actualiza el stock
+    const orderProducts = await Promise.all(
+      products.map(async (product) => {
+        if (product.sizeId) {
+          // Producto con tallas
+          await prisma.size.update({
+            where: {
+              id: product.sizeId,
+            },
+            data: {
+              stock: {
+                decrement: product.quantity,
+              },
+            },
+          });
+        } else {
+          // Producto sin tallas
+          await prisma.product.update({
+            where: {
+              id: product.id,
+            },
+            data: {
+              stock: {
+                decrement: product.quantity,
+              },
+            },
+          });
+        }
+
+        return prisma.orderProduct.create({
+          data: {
+            orderId: order.id,
+            productId: product.id,
+            quantity: product.quantity,
+            sizeId: product.sizeId || null,
           },
         });
       })

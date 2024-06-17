@@ -34,14 +34,23 @@ model Product {
   name        String
   price       Float
   description String
-  stock       Int
-  size        String?
+  stock       Int?
   color       String?
   images      String
   background  String
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   orders      OrderProduct[]
+  sizes       Size[]
+}
+
+model Size {
+  id           Int            @id @default(autoincrement())
+  name         String
+  stock        Int
+  productId    Int
+  product      Product        @relation(fields: [productId], references: [id])
+  OrderProduct OrderProduct[]
 }
 
 model Orders {
@@ -53,6 +62,7 @@ model Orders {
   Delivery  Delivery[]
   products  OrderProduct[]
   user      User           @relation(fields: [userId], references: [id])
+
   @@index([userId], map: "Orders_userId_fkey")
 }
 
@@ -61,8 +71,11 @@ model OrderProduct {
   orderId   Int
   productId Int
   quantity  Int
+  sizeId    Int? // Campo opcional para la talla
   order     Orders  @relation(fields: [orderId], references: [id])
   product   Product @relation(fields: [productId], references: [id])
+  size      Size?   @relation(fields: [sizeId], references: [id]) // Relación con Size
+
   @@index([orderId], map: "OrderProduct_orderId_fkey")
   @@index([productId], map: "OrderProduct_productId_fkey")
 }

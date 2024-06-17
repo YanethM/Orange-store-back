@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/UserController');
 const {createUserValidator, validateCreateUser} = require('../middlewares/validateCreateUser');
+const authenticatedToken = require('../middlewares/authMiddleware');
 const multer = require('multer');
 
 
@@ -17,9 +18,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 router.post('/new-user', upload.single('avatar'), createUserValidator, validateCreateUser, userController.createUser);
-router.get('/', userController.getAllUsers);
-router.get('/:id', userController.getUserById);
-router.patch('/edit/:id', upload.single('avatar'), userController.updateUser);
-router.delete('/remove/:id', userController.deleteUser);
+router.get('/',authenticatedToken, userController.getAllUsers);
+router.get('/:id',authenticatedToken, userController.getUserById);
+router.patch('/edit/:id',authenticatedToken, upload.single('avatar'), userController.updateUser);
+router.delete('/remove/:id', authenticatedToken, userController.deleteUser);
 
 module.exports = router;

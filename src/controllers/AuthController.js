@@ -1,91 +1,127 @@
-const { hashSync, compareSync } = require('bcrypt');
-const { PrismaClient } = require('@prisma/client');
+const { hashSync, compareSync } = require("bcrypt");
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
- const signup = async (req, res) => {
-   const { fullname, identification, email, password } = req.body;
-   console.log(req.body);
-   try {
-     const user = await prisma.user.findFirst({
-       where: {
-         identification: identification,
-       },
-     });
-     if (user) {
-       res.status(400).json({ error: "User already exists" });
-     } else {
-       const newUser = await prisma.user.create({
-         data: {
-           fullname,
-           identification,
-           email,
-           password: hashSync(password, 10),
-         },
-       });
-       res.status(201).json(newUser);
-     }
-   } catch (error) {
-     console.error(error);
-     res.status(500).json({ error: "Failed to create user" });
-   }
- };
+const signup = async (req, res) => {
+  const { fullname, identification, email, password } = req.body;
+  console.log(req.body);
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        identification: identification,
+      },
+    });
+    if (user) {
+      res.status(400).json({ error: "User already exists" });
+    } else {
+      const newUser = await prisma.user.create({
+        data: {
+          fullname,
+          identification,
+          email,
+          password: hashSync(password, 10),
+        },
+      });
+      res.status(201).json(newUser);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to create user" });
+  }
+};
 
- const login = async (req, res) => {
+const login = async (req, res) => {
   const { identification, password } = req.body;
   console.log(req.body);
   try {
-      const user = await prisma.user.findFirst({
-          where: {
-              identification: identification
-          },
-      });
-      if (user) {
-          const valid = compareSync(password, user.password);
-          if (valid) {
-              const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-                  expiresIn: '1h',
-              });
-              res.status(200).json({
-                  id: user.id,
-                  fullname: user.fullname,
-                  role: user.role,
-                  email: user.email,
-                  token: token
-              });
-          } else {
-              res.status(401).json({ error: 'Invalid credentials' });
-          }
-      } else {
-          res.status(404).json({ error: 'User not found' });
-      }
-  } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Failed to login" });
-  }
-}
-
- const verifyToken = (req, res, next) => {
-    const token = req.headers['authorization'];
-    if (!token) {
-        return res.status(403).json({ error: 'Token not provided' });
-    }
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
-        req.userId = decoded.id;
-        next();
+    const user = await prisma.user.findFirst({
+      where: {
+        identification: identification,
+      },
     });
-}
+    if (user) {
+      const valid = compareSync(password, user.password);
+      if (valid) {
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+          expiresIn: "1h",
+        });
+        res.status(200).json({
+          token: token,
+        });
+      } else {
+        console.log("Invalid credentials");
+        res.status(401).json({ error: "Invalid credentials" });
+      }
+    } else {
+      console.log("User not found");
+      res.status(404).json({ error: "User not found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to login" });
+  }
+};
 
- const logout = (req, res) => {
-    res.status(200).json({ message: 'Logout successful' });
-}
+const verifyToken = (req, res, next) => {
+  const token = req.headers["authorization"];
+  if (!token) {
+    return res.status(403).json({ error: "Token not provided" });
+  }
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    req.userId = decoded.id;
+    next();
+  });
+};
+
+const getSession = async (req, res) => {
+  if (!req.headers.authorization) {
+    return res.status(400).send("No token provided");
+  }
+  const token = req.headers.authorization.split(" ")[1];
+  console.log(token);
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log(decoded);
+    if (!decoded) {
+      return res.status(400).send("Invalid token");
+    }
+    const user = await prisma.user.findUnique({
+      where: {
+        id: decoded.id,
+      },
+    });
+    console.log(user);
+    if (!user) {
+      return res.status(400).send("User not found");
+    } else {
+      // Crear una copia del usuario sin la contraseña
+      const { password, ...userWithoutPassword } = user;
+      res.status(200).json({
+        message: "User found",
+        user: userWithoutPassword,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: "Error getting session",
+      error,
+    });
+  }
+};
+
+
+const logout = (req, res) => {
+  res.status(200).json({ message: "Logout successful" });
+};
 
 module.exports = {
-    signup,
-    login,
-    verifyToken,
-    logout,
+  signup,
+  login,
+  verifyToken,
+  getSession,
+  logout,
 };
