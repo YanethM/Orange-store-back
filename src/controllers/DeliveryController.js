@@ -16,12 +16,12 @@ const createDelivery = async (req, res) => {
     });
 
     res.status(201).json({
-      message: 'Delivery created successfully',
+      message: 'Orden creada exitosamente',
       delivery,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to create delivery' });
+    res.status(500).json({ error: 'Ocurrio un error al crear la orden de compra' });
   }
 };
 
@@ -31,7 +31,7 @@ const getDeliveries = async (req, res) => {
     res.status(200).json(deliveries);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to fetch deliveries' });
+    res.status(500).json({ error: 'Ocurrio un error al consultar las ordenes de compra existentes.' });
   }
 };
 
@@ -44,13 +44,13 @@ const getDeliveryById = async (req, res) => {
     });
 
     if (!delivery) {
-      return res.status(404).json({ error: 'Delivery not found' });
+      return res.status(404).json({ error: 'La orden de compra no se encontro registrada en el sistema.' });
     }
 
     res.status(200).json(delivery);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to fetch delivery' });
+    res.status(500).json({ error: 'Ocurrio un error al consultar la orden de compra' });
   }
 };
 
@@ -69,12 +69,12 @@ const updateDelivery = async (req, res) => {
     });
 
     res.status(200).json({
-      message: 'Delivery updated successfully',
+      message: 'Orden de compra actualizada exitosamente',
       delivery,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to update delivery' });
+    res.status(500).json({ error: 'Error al actualizar la orden de compra.' });
   }
 };
 
@@ -87,11 +87,11 @@ const deleteDelivery = async (req, res) => {
     });
 
     res.status(200).json({
-      message: 'Delivery deleted successfully',
+      message: 'Orden de compra eliminada exitosamente',
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to delete delivery' });
+    res.status(500).json({ error: 'No se pudo eliminar la orden de compra' });
   }
 };
 

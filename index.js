@@ -35,12 +35,13 @@ app.use((err, req, res, next) => {
 app.use('/users', userRoutes);
 app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
+
 app.use('/orders', orderRoutes);
 app.use('/deliveries', deliveryRoutes);
 app.use('/faqs', faqRoutes);
 
 
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 require('dotenv').config();
 
 // conexión con la base de datos

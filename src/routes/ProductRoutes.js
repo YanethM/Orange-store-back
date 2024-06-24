@@ -39,4 +39,11 @@ router.delete(
   productController.deleteProduct
 );
 
+router.get('/images/:imageName', (req, res) => {
+  const imageName = req.params.imageName;
+  const imagePath = path.join(__dirname, '../../uploads/products', imageName);
+  res.sendFile(imagePath);
+});
+
+
 module.exports = router;

@@ -249,61 +249,6 @@ const updateOrder = async (req, res) => {
     res.status(500).json({ error: "Failed to update order" });
   }
 };
-/* const updateOrder = async (req, res) => {
-  const { id } = req.params;
-  const { products } = req.body;
-  try {
-    // Calcular el total de la orden
-    let total = 0;
-    for (const product of products) {
-      const productData = await prisma.product.findUnique({
-        where: {
-          id: product.id,
-        },
-      });
-      total += productData.price * product.quantity;
-    }
-
-    // Actualizar la orden con el nuevo total
-    const order = await prisma.orders.update({
-      where: {
-        id: parseInt(id),
-      },
-      data: {
-        total: total,
-      },
-    });
-
-    // Eliminar las relaciones OrderProduct existentes
-    await prisma.orderProduct.deleteMany({
-      where: {
-        orderId: order.id,
-      },
-    });
-
-    // Crear las nuevas relaciones OrderProduct
-    const orderProducts = await Promise.all(
-      products.map((product) =>
-        prisma.orderProduct.create({
-          data: {
-            orderId: order.id,
-            productId: product.id,
-            quantity: product.quantity,
-          },
-        })
-      )
-    );
-
-    res.status(200).json({
-      message: "Order and OrderProducts updated successfully",
-      order,
-      orderProducts,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to update order" });
-  }
-}; */
 
 const deleteOrder = async (req, res) => {
   const { id } = req.params;
@@ -329,10 +274,38 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+const getOrderByUserId = async (req, res) => {
+  const { userId } = req.params;
+  console.log(userId);
+  try {
+      const orders = await prisma.orders.findMany({
+          where: {
+              userId: parseInt(userId),
+          },
+          include: {
+              products: {
+                  include: {
+                      product: {
+                          include: {
+                              sizes: true,
+                          },
+                      },
+                  },
+              },
+          },
+      });
+      res.status(200).json(orders);
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al obtener las ordenes' });
+  }
+};
+
 module.exports = {
   createOrder,
   getAllOrders,
   getOrderById,
   updateOrder,
   deleteOrder,
+  getOrderByUserId,
 };

@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const createProduct = async (req, res) => {
-  const { name, description, price, stock, sizes, gender } = req.body;
+  const { name, description, price, stock, sizes, color, gender } = req.body;
 
   let images = [];
   let background = null;
@@ -28,6 +28,7 @@ const createProduct = async (req, res) => {
       price: parseFloat(price),
       images: JSON.stringify(images),
       background,
+      color,
       gender
     };
 
