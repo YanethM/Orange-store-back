@@ -8,6 +8,7 @@ const authRoutes = require('./src/routes/AuthRoutes');
 const productRoutes = require('./src/routes/ProductRoutes');
 const orderRoutes = require('./src/routes/OrderRoutes');
 const deliveryRoutes = require('./src/routes/DeliveryRoutes');
+const faqRoutes = require('./src/routes/FaqRoutes');
 
 // Lista de IPs permitidas
 /* const allowedIPs = ['181.236.217.148', '181.236.217.20']; */
@@ -36,6 +37,7 @@ app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
 app.use('/orders', orderRoutes);
 app.use('/deliveries', deliveryRoutes);
+app.use('/faqs', faqRoutes);
 
 
 app.use('/uploads', express.static('uploads'));

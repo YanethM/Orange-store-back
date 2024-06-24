@@ -25,8 +25,8 @@ router.post(
   ]),
   productController.createProduct
 );
-router.get("/", authenticatedToken, productController.getAllProducts);
-router.get("/:id", authenticatedToken, productController.getProductById);
+router.get("/", productController.getAllProducts);
+router.get("/:id", productController.getProductById);
 router.patch(
   "/edit/:id",
   authenticatedToken,
