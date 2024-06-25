@@ -97,19 +97,19 @@ const createOrder = async (req, res) => {
       );
 
       res.status(201).json({
-        message: "Order and OrderProducts created successfully",
+        message: "Orden de productos creada exitosamente y stock decrementado.",
         order,
         orderProducts,
       });
     } else {
       res.status(201).json({
-        message: "Order created successfully, but stock was not decremented as the order is not paid.",
+        message: "Orden de productos creada exitosamente, pero el stock no fue decrementado porque el status de compra no esta pagado",
         order,
       });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to create Order and OrderProducts" });
+    res.status(500).json({ error: "Fallo la creacion de la orden de compra" });
   }
 };
 
@@ -128,7 +128,7 @@ const getAllOrders = async (req, res) => {
     res.status(200).json(orders);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch orders" });
+    res.status(500).json({ error: "Fallo la consulta de las ordenes de compra" });
   }
 };
 
@@ -151,11 +151,11 @@ const getOrderById = async (req, res) => {
     if (order) {
       res.status(200).json(order);
     } else {
-      res.status(404).json({ error: "Order not found" });
+      res.status(404).json({ error: "Orden de compra no encontrada" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch order" });
+    res.status(500).json({ error: "Fallo la consulta de la orden de compra" });
   }
 };
 
@@ -240,13 +240,13 @@ const updateOrder = async (req, res) => {
     }
 
     res.status(200).json({
-      message: "Order and OrderProducts updated successfully",
+      message: "Orden de compra actualizada exitosamente",
       order,
       orderProducts,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to update order" });
+    res.status(500).json({ error: "Fallo la actualizacion de la orden de compra" });
   }
 };
 
@@ -267,10 +267,10 @@ const deleteOrder = async (req, res) => {
       },
     });
 
-    res.status(200).json({ message: "Order deleted successfully" });
+    res.status(200).json({ message: "Orden de compra eliminada exitosamente" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to delete order" });
+    res.status(500).json({ error: "No se pudo eliminar la orden de compra" });
   }
 };
 

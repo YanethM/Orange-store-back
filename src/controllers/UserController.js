@@ -23,7 +23,7 @@ const createUser = async (req, res) => {
   const avatar = req.file ? req.file.filename : null;
 
   if (!allowedIdentifications.includes(identification)) {
-    return res.status(400).json({ error: 'Identification not allowed for registration' });
+    return res.status(400).json({ error: 'Identificacion no encontrada para crear el usuario' });
   }
 
 
@@ -50,12 +50,12 @@ const createUser = async (req, res) => {
     console.log(user);
 
     res.status(201).json({
-      message: "User created successfully",
+      message: "Usuario creado exitosamente",
       user,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to create user" });
+    res.status(500).json({ error: "Algo salio mal en la creacion del usuario" });
   }
 };
 
@@ -85,7 +85,7 @@ const getAllUsers = async (req, res) => {
     res.status(200).json(users);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch users" });
+    res.status(500).json({ error: "Fallo la consulta de los usuarios" });
   }
 };
 
@@ -102,7 +102,7 @@ const getUserById = async (req, res) => {
     res.status(200).json(user);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch user" });
+    res.status(500).json({ error: "Fallo la consulta del usuario" });
   }
 };
 
@@ -156,12 +156,12 @@ const updateUser = async (req, res) => {
     });
 
     res.status(200).json({
-      message: "User updated successfully",
+      message: "Usuario actualizado exitosamente",
       user,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to update user" });
+    res.status(500).json({ error: "Fallo la actualizacion del usuario" });
   }
 };
 
@@ -175,10 +175,10 @@ const deleteUser = async (req, res) => {
       },
     });
 
-    res.status(200).json({ message: "User deleted successfully" });
+    res.status(200).json({ message: "Usuario eliminado exitosamente" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to delete user" });
+    res.status(500).json({ error: "No se pudo eliminar el usuario" });
   }
 };
 

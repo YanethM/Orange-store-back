@@ -38,7 +38,7 @@ const createProduct = async (req, res) => {
       try {
         parsedSizes = JSON.parse(sizes);
       } catch (error) {
-        return res.status(400).json({ error: "Invalid sizes format" });
+        return res.status(400).json({ error: "Formato de talla incorrecto" });
       }
     }
 
@@ -64,12 +64,12 @@ const createProduct = async (req, res) => {
 
     console.log(product);
     res.status(201).json({
-      message: "Product created successfully",
+      message: "Producto creado exitosamente",
       product,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to create product" });
+    res.status(500).json({ error: "Fallo la creacion de la orden de compra" });
   }
 };
 
@@ -83,7 +83,7 @@ const getAllProducts = async (req, res) => {
     res.status(200).json(products);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch products" });
+    res.status(500).json({ error: "Fallo la consulta de los productos" });
   }
 };
 
@@ -101,11 +101,11 @@ const getProductById = async (req, res) => {
     if (product) {
       res.status(200).json(product);
     } else {
-      res.status(404).json({ error: "Product not found" });
+      res.status(404).json({ error: "Producto no encontrado" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch product" });
+    res.status(500).json({ error: "No se encontro el producto" });
   }
 };
 
@@ -133,7 +133,7 @@ const updateProduct = async (req, res) => {
       try {
         parsedSizes = JSON.parse(sizes);
       } catch (error) {
-        return res.status(400).json({ error: "Invalid sizes format" });
+        return res.status(400).json({ error: "Tallas en formato incorrecto" });
       }
     }
 
@@ -167,12 +167,12 @@ const updateProduct = async (req, res) => {
     }
 
     res.status(200).json({
-      message: "Product updated successfully",
+      message: "Producto actualizado exitosamente",
       product,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to update product" });
+    res.status(500).json({ error: "Fallo la actualizacion del producto" });
   }
 };
 
@@ -184,10 +184,10 @@ const deleteProduct = async (req, res) => {
         id: parseInt(id),
       },
     });
-    res.status(200).json({ message: "Product deleted successfully" });
+    res.status(200).json({ message: "Producto eliminado exitosamente" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to delete product" });
+    res.status(500).json({ error: "No se pudo eliminar el producto" });
   }
 };
 

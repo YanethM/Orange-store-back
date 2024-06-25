@@ -16,7 +16,7 @@ const signup = async (req, res) => {
       },
     });
     if (user) {
-      res.status(400).json({ error: "User already exists" });
+      res.status(400).json({ error: "El usuario ya se encuentra registrado." });
     } else {
       const newUser = await prisma.user.create({
         data: {
@@ -30,7 +30,7 @@ const signup = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to create user" });
+    res.status(500).json({ error: "Ocurrio un error al crear el usuario." });
   }
 };
 
@@ -54,26 +54,26 @@ const login = async (req, res) => {
         });
       } else {
         console.log("Invalid credentials");
-        res.status(401).json({ error: "Invalid credentials" });
+        res.status(401).json({ error: "Identificacion o contraseña incorrectas" });
       }
     } else {
       console.log("User not found");
-      res.status(404).json({ error: "User not found" });
+      res.status(404).json({ error: "Usario no encontrado en la base de datos" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to login" });
+    res.status(500).json({ error: "No se pudo iniciar sesion." });
   }
 };
 
 const verifyToken = (req, res, next) => {
   const token = req.headers["authorization"];
   if (!token) {
-    return res.status(403).json({ error: "Token not provided" });
+    return res.status(403).json({ error: "No se ha suministrado el token" });
   }
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ error: "No tiene permisos para realizar esta accion." });
     }
     req.userId = decoded.id;
     next();
@@ -82,7 +82,7 @@ const verifyToken = (req, res, next) => {
 
 const getSession = async (req, res) => {
   if (!req.headers.authorization) {
-    return res.status(400).send("No token provided");
+    return res.status(400).send("No se ha suministrado el token");
   }
   const token = req.headers.authorization.split(" ")[1];
   console.log(token);
@@ -90,7 +90,7 @@ const getSession = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log(decoded);
     if (!decoded) {
-      return res.status(400).send("Invalid token");
+      return res.status(400).send("Token invalido");
     }
     const user = await prisma.user.findUnique({
       where: {
@@ -99,18 +99,18 @@ const getSession = async (req, res) => {
     });
     console.log(user);
     if (!user) {
-      return res.status(400).send("User not found");
+      return res.status(400).send("Usario no encontrado en la base de datos");
     } else {
       // Crear una copia del usuario sin la contraseña
       const { password, ...userWithoutPassword } = user;
       res.status(200).json({
-        message: "User found",
+        message: "Usuario encontrado",
         user: userWithoutPassword,
       });
     }
   } catch (error) {
     res.status(500).json({
-      message: "Error getting session",
+      message: "Error al buscar el usuario en la base de datos e iniciar sesion",
       error,
     });
   }
@@ -125,7 +125,7 @@ const requestPasswordReset = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "Usario no encontrado en la base de datos" });
     }
 
     // Generar un token de restablecimiento de contraseña
@@ -161,10 +161,10 @@ const requestPasswordReset = async (req, res) => {
              <p><a href="${resetURL}">${resetURL}</a></p>`,
     });
 
-    res.status(200).json({ message: "Password reset email sent" });
+    res.status(200).json({ message: "Se ha enviado un correo electronico con el enlace para cambiar contraseña" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to send password reset email" });
+    res.status(500).json({ error: "Fallo el envio de correo electronico para restablecer la contraseña" });
   }
 };
 
@@ -183,7 +183,7 @@ const resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ error: "Invalid or expired token" });
+      return res.status(400).json({ error: "El token suministrado es invalido o ya vencio" });
     }
 
     // Actualizar la contraseña del usuario
@@ -198,16 +198,16 @@ const resetPassword = async (req, res) => {
       },
     });
 
-    res.status(200).json({ message: "Password has been reset successfully" });
+    res.status(200).json({ message: "La contraseña se modifico exitosamente" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to reset password" });
+    res.status(500).json({ error: "No se pudo realizar el cambio de la contraseña" });
   }
 };
 
 
 const logout = (req, res) => {
-  res.status(200).json({ message: "Logout successful" });
+  res.status(200).json({ message: "Cierre de sesion exitoso" });
 };
 
 module.exports = {

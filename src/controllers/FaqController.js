@@ -15,7 +15,7 @@ const createFaq = async (req, res) => {
     res.status(201).json(newFaq);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to create FAQ" });
+    res.status(500).json({ error: "Fallo la creacion de la FAQ" });
   }
 };
 
@@ -25,7 +25,7 @@ const getAllFaqs = async (req, res) => {
     res.status(200).json(faqs);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch FAQs" });
+    res.status(500).json({ error: "Fallo la consulta de las FAQs" });
   }
 };
 
@@ -37,7 +37,7 @@ const getActiveFaqs = async (req, res) => {
     res.status(200).json(faqs);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch active FAQs" });
+    res.status(500).json({ error: "Fallo la consulta de las FAQs activas" });
   }
 };
 
@@ -51,11 +51,11 @@ const getFaqById = async (req, res) => {
     if (faq) {
       res.status(200).json(faq);
     } else {
-      res.status(404).json({ error: "FAQ not found" });
+      res.status(404).json({ error: "FAQ no encontrada" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch FAQ" });
+    res.status(500).json({ error: "No se encontro la FAQ" });
   }
 };
 
@@ -75,7 +75,7 @@ const updateFaq = async (req, res) => {
     res.status(200).json(updatedFaq);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to update FAQ" });
+    res.status(500).json({ error: "Fallo la actualizacion de la FAQ" });
   }
 };
 
@@ -86,10 +86,10 @@ const deleteFaq = async (req, res) => {
     await prisma.faq.delete({
       where: { id: parseInt(id) },
     });
-    res.status(200).json({ message: "FAQ deleted successfully" });
+    res.status(200).json({ message: "FAQ eliminada exitosamente" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to delete FAQ" });
+    res.status(500).json({ error: "Fallo la eliminacion de la FAQ" });
   }
 };
 
