@@ -2,11 +2,20 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 
-const createOrder = async (req, res) => {
-  const { userId, products, isPaid } = req.body; // Añadir isPaid al cuerpo de la solicitud
+/* const createOrder = async (req, res) => {
+  const { userId, products, isPaid, gender } = req.body;
+
+  if (!userId || !products || products.length === 0) {
+    return res.status(400).json({
+      error: "Los parámetros userId y products son requeridos.",
+    });
+  }
+
   try {
     // Calcular el total de la orden
     let total = 0;
+    const productsWithDetails = [];
+
     for (const product of products) {
       const productData = await prisma.product.findUnique({
         where: {
@@ -17,28 +26,40 @@ const createOrder = async (req, res) => {
         },
       });
 
-      if (productData.sizes.length > 0) {
+      if (!productData) {
+        return res.status(404).json({
+          error: `Producto con ID ${product.id} no encontrado.`,
+        });
+      }
+
+      let sizeData;
+      if (product.sizeId) {
         // Producto con tallas
-        const sizeData = productData.sizes.find(
+        sizeData = productData.sizes.find(
           (size) => size.id === product.sizeId
         );
         if (!sizeData || sizeData.stock < product.quantity) {
           return res.status(400).json({
-            error: `Not enough stock for size ${product.sizeId} of product ${productData.name}`,
+            error: `No hay suficiente stock para la talla ${product.sizeId} del producto ${productData.name}`,
           });
         }
-
-        total += productData.price * product.quantity;
       } else {
         // Producto sin tallas
         if (productData.stock < product.quantity) {
           return res.status(400).json({
-            error: `Not enough stock for product ${productData.name}`,
+            error: `No hay suficiente stock para el producto ${productData.name}`,
           });
         }
-
-        total += productData.price * product.quantity;
       }
+
+      total += productData.price * product.quantity;
+
+      // Añadir detalles al producto
+      productsWithDetails.push({
+        ...product,
+        gender: productData.gender,
+        sizeData,
+      });
     }
 
     // Crea la orden
@@ -50,7 +71,8 @@ const createOrder = async (req, res) => {
           },
         },
         total: total,
-        isPaid: isPaid || false, // Asignar el valor de isPaid, por defecto false si no se proporciona
+        isPaid: isPaid || false,
+        gender: gender || null,
       },
     });
 
@@ -58,7 +80,7 @@ const createOrder = async (req, res) => {
     if (order.isPaid) {
       // Crea las relaciones OrderProduct y actualiza el stock
       const orderProducts = await Promise.all(
-        products.map(async (product) => {
+        productsWithDetails.map(async (product) => {
           if (product.sizeId) {
             // Producto con tallas
             await prisma.size.update({
@@ -91,6 +113,7 @@ const createOrder = async (req, res) => {
               productId: product.id,
               quantity: product.quantity,
               sizeId: product.sizeId || null,
+              gender: product.gender || null,
             },
           });
         })
@@ -103,15 +126,150 @@ const createOrder = async (req, res) => {
       });
     } else {
       res.status(201).json({
-        message: "Orden de productos creada exitosamente, pero el stock no fue decrementado porque el status de compra no esta pagado",
+        message: "Orden de productos creada exitosamente, pero el stock no fue decrementado porque el status de compra no está pagado.",
         order,
       });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Fallo la creacion de la orden de compra" });
+    res.status(500).json({ error: "Fallo la creación de la orden de compra" });
   }
 };
+ */
+
+const createOrder = async (req, res) => {
+  const { userId, products, isPaid } = req.body;
+
+  if (!userId || !products || products.length === 0) {
+    return res.status(400).json({
+      error: "Los parámetros userId y products son requeridos.",
+    });
+  }
+
+  try {
+    // Calcular el total de la orden
+    let total = 0;
+    const productsWithDetails = [];
+
+    for (const product of products) {
+      const productData = await prisma.product.findUnique({
+        where: {
+          id: product.id,
+        },
+        include: {
+          sizes: true,
+        },
+      });
+
+      if (!productData) {
+        return res.status(404).json({
+          error: `Producto con ID ${product.id} no encontrado.`,
+        });
+      }
+
+      let sizeData;
+      if (product.sizeId) {
+        // Producto con tallas
+        sizeData = productData.sizes.find(
+          (size) => size.id === product.sizeId && size.gender === product.gender
+        );
+        if (!sizeData || sizeData.stock < product.quantity) {
+          return res.status(400).json({
+            error: `No hay suficiente stock para la talla ${product.sizeId} del producto ${productData.name}`,
+          });
+        }
+      } else {
+        // Producto sin tallas
+        if (productData.stock < product.quantity) {
+          return res.status(400).json({
+            error: `No hay suficiente stock para el producto ${productData.name}`,
+          });
+        }
+      }
+
+      total += productData.price * product.quantity;
+
+      // Añadir detalles al producto
+      productsWithDetails.push({
+        ...product,
+        gender: product.gender,
+        sizeData,
+      });
+    }
+
+    // Crea la orden
+    const order = await prisma.orders.create({
+      data: {
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
+        total: total,
+        isPaid: isPaid || false,
+      },
+    });
+
+    // Solo actualizar el stock si la orden está pagada
+    if (order.isPaid) {
+      const orderProducts = await Promise.all(
+        productsWithDetails.map(async (product) => {
+          if (product.sizeId) {
+            // Producto con tallas y género
+            await prisma.size.update({
+              where: {
+                id: product.sizeId,
+              },
+              data: {
+                stock: {
+                  decrement: product.quantity,
+                },
+              },
+            });
+          } else {
+            // Producto sin tallas
+            await prisma.product.update({
+              where: {
+                id: product.id,
+              },
+              data: {
+                stock: {
+                  decrement: product.quantity,
+                },
+              },
+            });
+          }
+
+          return prisma.orderProduct.create({
+            data: {
+              orderId: order.id,
+              productId: product.id,
+              quantity: product.quantity,
+              sizeId: product.sizeId || null,
+              gender: product.gender || null,
+            },
+          });
+        })
+      );
+
+      res.status(201).json({
+        message: "Orden de productos creada exitosamente y stock decrementado.",
+        order,
+        orderProducts,
+      });
+    } else {
+      res.status(201).json({
+        message: "Orden de productos creada exitosamente, pero el stock no fue decrementado porque el estado de compra no está pagado.",
+        order,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Fallo la creación de la orden de compra" });
+  }
+};
+
+
 
 const getAllOrders = async (req, res) => {
   try {
@@ -128,7 +286,9 @@ const getAllOrders = async (req, res) => {
     res.status(200).json(orders);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Fallo la consulta de las ordenes de compra" });
+    res
+      .status(500)
+      .json({ error: "Fallo la consulta de las ordenes de compra" });
   }
 };
 
@@ -246,7 +406,9 @@ const updateOrder = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Fallo la actualizacion de la orden de compra" });
+    res
+      .status(500)
+      .json({ error: "Fallo la actualizacion de la orden de compra" });
   }
 };
 
@@ -278,26 +440,26 @@ const getOrderByUserId = async (req, res) => {
   const { userId } = req.params;
   console.log(userId);
   try {
-      const orders = await prisma.orders.findMany({
-          where: {
-              userId: parseInt(userId),
-          },
+    const orders = await prisma.orders.findMany({
+      where: {
+        userId: parseInt(userId),
+      },
+      include: {
+        products: {
           include: {
-              products: {
-                  include: {
-                      product: {
-                          include: {
-                              sizes: true,
-                          },
-                      },
-                  },
+            product: {
+              include: {
+                sizes: true,
               },
+            },
           },
-      });
-      res.status(200).json(orders);
+        },
+      },
+    });
+    res.status(200).json(orders);
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Error al obtener las ordenes' });
+    console.error(error);
+    res.status(500).json({ error: "Error al obtener las ordenes" });
   }
 };
 

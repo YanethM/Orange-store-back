@@ -2,22 +2,23 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const createFaq = async (req, res) => {
-  const { title, content, status } = req.body;
+  const { title, content, position } = req.body;
 
   try {
     const newFaq = await prisma.faq.create({
       data: {
         title,
         content,
-        status,
+        position,
       },
     });
     res.status(201).json(newFaq);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Fallo la creacion de la FAQ" });
+    res.status(500).json({ error: "Fallo la creación de la FAQ" });
   }
 };
+
 
 const getAllFaqs = async (req, res) => {
   try {
@@ -29,17 +30,6 @@ const getAllFaqs = async (req, res) => {
   }
 };
 
-const getActiveFaqs = async (req, res) => {
-  try {
-    const faqs = await prisma.faq.findMany({
-      where: { status: true },
-    });
-    res.status(200).json(faqs);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Fallo la consulta de las FAQs activas" });
-  }
-};
 
 const getFaqById = async (req, res) => {
   const { id } = req.params;
@@ -61,7 +51,7 @@ const getFaqById = async (req, res) => {
 
 const updateFaq = async (req, res) => {
   const { id } = req.params;
-  const { title, content, status } = req.body;
+  const { title, content, position } = req.body;
 
   try {
     const updatedFaq = await prisma.faq.update({
@@ -69,7 +59,7 @@ const updateFaq = async (req, res) => {
       data: {
         title,
         content,
-        status,
+        position,
       },
     });
     res.status(200).json(updatedFaq);
@@ -97,7 +87,6 @@ module.exports = {
   createFaq,
   getAllFaqs,
   getFaqById,
-  getActiveFaqs,
   updateFaq,
   deleteFaq,
 };

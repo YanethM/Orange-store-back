@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const { IpFilter, IpDeniedError } = require('express-ipfilter');
+const path = require("path");
 
 const userRoutes = require('./src/routes/UserRoutes');
 const authRoutes = require('./src/routes/AuthRoutes');

@@ -26,6 +26,7 @@ router.post(
   productController.createProduct
 );
 router.get("/", productController.getAllProducts);
+router.get("/gender-size", productController.getProductsByGenderAndSize);
 router.get("/:id", productController.getProductById);
 router.patch(
   "/edit/:id",
